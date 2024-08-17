@@ -8,6 +8,7 @@ import { ethers } from "ethers";
 import { createPublicClient, http } from "viem";
 import AzimuthTodo from "../artifacts/contracts/AzimuthTodo.sol/AzimuthTodo.json";
 import { debounce } from "lodash";
+import { SaveIcon, CheckIcon } from "@heroicons/react/solid";
 
 const contractAddress = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
 const projectId = process.env.NEXT_PUBLIC_PROJECT_ID;
@@ -320,14 +321,14 @@ export default function TodoList() {
                 type="text"
                 value={newTodo}
                 onChange={(e) => setNewTodo(e.target.value)}
-                placeholder="Add a todo (use #tags)"
+                placeholder="Add a new todo (use #tags)"
                 className="flex-grow p-3 bg-transparent focus:outline-none text-[#fdfeff] placeholder-[#f3f3f3]"
               />
               <button
                 type="submit"
                 className="bg-[#087eb4] text-white p-3 hover:bg-[#008dce] transition duration-300"
               >
-                Add Todo
+                <SaveIcon className="h-6 w-6" />
               </button>
             </div>
           </form>
@@ -358,9 +359,9 @@ export default function TodoList() {
                                   </span>
                                   <button
                                     onClick={() => completeTodo(todo.id)}
-                                    className="ml-2 bg-[#06ad00] text-white px-3 py-1 rounded hover:bg-[#3dd69c] transition duration-300"
+                                    className="ml-2 bg-[#06ad00] text-white p-1 rounded hover:bg-[#3dd69c] transition duration-300"
                                   >
-                                    Complete
+                                    <CheckIcon className="h-5 w-5" />
                                   </button>
                                 </div>
                                 <span className="text-xs text-[#8b9cb3] mt-1">
@@ -375,7 +376,6 @@ export default function TodoList() {
                 )}
               </div>
             )}
-
           {groupedTodos.completed &&
             Object.keys(groupedTodos.completed).length > 0 && (
               <div className="mb-12">
