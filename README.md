@@ -4,7 +4,7 @@
 
 ## 🚀 About
 
-Open Work is a fully onchain todo app built on Base that enables you to build in public and give the world insight into what you're working on.
+[Open Work](https://openwork.fi) is a fully onchain todo app built on Base that enables you to build in public and give the world insight into what you're working on.
 
 ## 🌟 Features
 
