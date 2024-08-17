@@ -309,9 +309,7 @@ export default function TodoList() {
     <WagmiConfig config={wagmiConfig}>
       <div className="min-h-screen bg-[#030d22] text-[#fdfeff] p-8">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-4xl font-bold mb-2 text-[#ff2592]">
-            Open Work: @wbnns
-          </h1>
+          <h1 className="text-4xl font-bold mb-2 text-[#ff2592]">Open Work</h1>
           <p className="mb-6 text-[#4d8bee]">
             Connected wallet: {walletAddress}
           </p>
@@ -322,7 +320,7 @@ export default function TodoList() {
                 type="text"
                 value={newTodo}
                 onChange={(e) => setNewTodo(e.target.value)}
-                placeholder="Add a new todo (use #tags)"
+                placeholder="Add a todo (use #tags)"
                 className="flex-grow p-3 bg-transparent focus:outline-none text-[#fdfeff] placeholder-[#f3f3f3]"
               />
               <button
