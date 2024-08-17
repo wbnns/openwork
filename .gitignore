@@ -1,36 +1,94 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Next.js
+.next/
+out/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Node.js
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
+# Build files
+/.pnp
+.pnp.js
+/build
 
-# vercel
-.vercel
+# Testing
+/coverage
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Hardhat files
+cache/
+artifacts/
+
+# Foundry files
+out/
+forge-cache/
+.forge-cache/
+
+# TypeChain files
+typechain/
+typechain-types/
+
+# solidity-coverage files
+coverage/
+coverage.json
+
+# Deployment related
+deployments/
+
+# Hardhat plugins
+.openzeppelin/
+
+# Foundry plugins
+.foundry/
+
+# Ignore build output directory
+dist/
+
+# Ignore environment variables
+.secret
+.infura
+
+# Misc
+*.log
+*.csv
+*.dat
+*.out
+*.pid
+*.seed
+*.pid.lock

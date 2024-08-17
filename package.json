@@ -9,14 +9,47 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.2.3",
+    "@nomiclabs/hardhat-waffle": "^2.0.6",
+    "@openzeppelin/contracts": "^5.0.2",
+    "@wagmi/core": "^2.13.4",
+    "@web3modal/ethereum": "^2.7.1",
+    "@web3modal/wagmi": "^5.0.11",
+    "assert": "^2.1.0",
+    "browserify-zlib": "^0.2.0",
+    "crypto-browserify": "^3.12.0",
+    "dotenv": "^16.4.5",
+    "encoding": "^0.1.13",
+    "ethereum-waffle": "^4.0.10",
+    "ethers": "^5.7.2",
+    "https-browserify": "^1.0.0",
+    "lodash": "^4.17.21",
+    "next": "14.2.5",
+    "os-browserify": "^0.3.0",
+    "path-browserify": "^1.0.1",
+    "pino-pretty": "^11.2.2",
     "react": "^18",
     "react-dom": "^18",
-    "next": "14.2.5"
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "url": "^0.11.4",
+    "viem": "^2.19.6",
+    "wagmi": "^2.12.5",
+    "web3modal": "^1.9.12"
   },
   "devDependencies": {
-    "postcss": "^8",
-    "tailwindcss": "^3.4.1",
+    "autoprefixer": "^10.4.20",
     "eslint": "^8",
-    "eslint-config-next": "14.2.5"
-  }
+    "eslint-config-next": "14.2.5",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10"
+  },
+  "description": "This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).",
+  "main": "hardhat.config.js",
+  "directories": {
+    "test": "test"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
 }
