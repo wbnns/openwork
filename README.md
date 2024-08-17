@@ -12,7 +12,7 @@
 - **Tag-based Organization**: Categorize your tasks with hashtags for easy sorting.
 - **Chronological Sorting**: View your tasks from oldest to newest.
 - **Completion Tracking**: Mark tasks as complete and see your progress.
-- **Web3 Integration**: Connect with your Ethereum wallet (e.g., MetaMask).
+- **Web3 Integration**: Connect with your Ethereum wallet (e.g., Coinbase Wallet).
 - **Responsive Design**: Sleek, cyberpunk-inspired UI that works on various devices.
 
 ## 🛠 Tech Stack

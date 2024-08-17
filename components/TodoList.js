@@ -120,7 +120,7 @@ export default function TodoList() {
     try {
       if (typeof window.ethereum === "undefined") {
         throw new Error(
-          "No Web3 provider detected. Please install MetaMask or another Web3 wallet."
+          "No Web3 provider detected. Please install Coinbase Wallet or another Web3 wallet."
         );
       }
 
@@ -128,7 +128,7 @@ export default function TodoList() {
       const { chainId } = await provider.getNetwork();
 
       if (chainId !== 8453) {
-        throw new Error("Please connect to the Base network.");
+        throw new Error("Please connect to Base.");
       }
 
       const accounts = await window.ethereum.request({
@@ -156,7 +156,7 @@ export default function TodoList() {
       // Listen for chain changes
       window.ethereum.on("chainChanged", (chainId) => {
         if (parseInt(chainId, 16) !== 8453) {
-          setError("Please connect to the Base network.");
+          setError("Please connect to Base.");
           setContract(null);
         } else {
           setError(null);
@@ -170,7 +170,7 @@ export default function TodoList() {
       setIsInitialLoading(false);
       setError(
         error.message ||
-          "Failed to initialize the app. Please make sure you're connected to the Base network and try again."
+          "Failed to initialize the app. Please make sure you're connected to Base and try again."
       );
     }
   }, []);
