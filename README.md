@@ -4,7 +4,7 @@
 
 ## 🚀 About
 
-Open Work is a fully onchain todo app built on Base that enables you to build in public and give people insight into what you're working on.
+Open Work is a fully onchain todo app built on Base that enables you to build in public and give the world insight into what you're working on.
 
 ## 🌟 Features
 
