@@ -101,6 +101,11 @@ export default function TodoList() {
   const debouncedFetchTodosCallback = useCallback(() => {
     debouncedFetchTodos(fetchTodos);
   }, [fetchTodos]);
+  const checkBaseChain = async () => {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const { chainId } = await provider.getNetwork();
+    return chainId === 8453;
+  };
 
   const switchToBaseChain = async () => {
     try {
@@ -135,14 +140,22 @@ export default function TodoList() {
 
       console.log("Wallet connected:", accounts[0]);
 
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const { chainId } = await provider.getNetwork();
+      // Check if connected to the correct network
+      const isOnBaseChain = await checkBaseChain();
 
-      if (chainId !== 8453) {
+      if (!isOnBaseChain) {
         console.log(
-          "Wallet connected to a different chain. Switching to Base (8453)..."
+          "Wallet connected to a different chain. Prompting to switch to Base (8453)..."
         );
         await switchToBaseChain();
+      }
+
+      // Double-check the network after attempting to switch
+      const finalCheck = await checkBaseChain();
+      if (!finalCheck) {
+        console.warn(
+          "User did not switch to Base (8453). Some features may not work."
+        );
       }
 
       // Initialize contract after wallet connection and chain check
