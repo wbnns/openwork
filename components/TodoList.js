@@ -56,6 +56,7 @@ export default function TodoList() {
   const [totalTodos, setTotalTodos] = useState(0);
   const [displayedTodos, setDisplayedTodos] = useState(10);
   const [selectedTaskIndex, setSelectedTaskIndex] = useState(-1);
+  const [isWalletConnected, setIsWalletConnected] = useState(false);
   const inputRef = useRef(null);
   const pendingTodosRef = useRef([]);
 
@@ -101,6 +102,31 @@ export default function TodoList() {
     debouncedFetchTodos(fetchTodos);
   }, [fetchTodos]);
 
+  const connectWallet = async () => {
+    try {
+      if (typeof window.ethereum === "undefined") {
+        throw new Error(
+          "No wallet detected. Please install Coinbase Wallet or another option from a different provider."
+        );
+      }
+
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+
+      setWalletAddress(accounts[0]);
+      setIsWalletConnected(true);
+
+      console.log("Wallet connected:", accounts[0]);
+
+      // Initialize contract after wallet connection
+      initializeContract();
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+      setError(error.message || "Failed to connect wallet.");
+    }
+  };
+
   const initializeContract = useCallback(async () => {
     console.log("Initializing contract");
     try {
@@ -112,6 +138,7 @@ export default function TodoList() {
 
       const provider = new ethers.providers.Web3Provider(window.ethereum);
       const { chainId } = await provider.getNetwork();
+      console.log("Connected to chain:", chainId);
 
       if (chainId !== 8453) {
         throw new Error("Please connect to Base.");
@@ -121,7 +148,9 @@ export default function TodoList() {
         method: "eth_requestAccounts",
       });
       const userAddress = accounts[0];
+      console.log("Connected wallet address:", userAddress);
       setWalletAddress(userAddress);
+      setIsWalletConnected(true);
 
       const signer = provider.getSigner();
       const contract = new ethers.Contract(
@@ -162,12 +191,22 @@ export default function TodoList() {
   }, []);
 
   useEffect(() => {
-    initializeContract();
-  }, [initializeContract]);
+    console.log("Checking if wallet is connected...");
+    if (typeof window.ethereum !== "undefined") {
+      connectWallet();
+    } else {
+      console.log("No Ethereum provider found.");
+      setIsInitialLoading(false);
+      setError("Please install MetaMask or another Web3 wallet.");
+    }
+  }, []);
 
   useEffect(() => {
     if (contract && walletAddress) {
+      console.log("Contract and wallet are ready, fetching todos...");
       fetchTodos();
+    } else {
+      console.log("Contract or wallet not ready yet.");
     }
   }, [contract, walletAddress, fetchTodos]);
 
@@ -298,6 +337,7 @@ export default function TodoList() {
   };
 
   if (isInitialLoading) {
+    console.log("Initial loading state...");
     return (
       <div className="flex items-center justify-center h-screen bg-[#030d22] text-[#fdfeff]">
         Loading...
@@ -316,7 +356,12 @@ export default function TodoList() {
   if (!walletAddress) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#030d22] text-[#fdfeff]">
-        Please connect your wallet to Base to view your todos.
+        <button
+          onClick={connectWallet}
+          className="bg-[#087eb4] text-white p-3 rounded-lg hover:bg-[#008dce] transition duration-300"
+        >
+          Connect Wallet
+        </button>
       </div>
     );
   }
