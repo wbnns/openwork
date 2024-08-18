@@ -50,7 +50,6 @@ export default function TodoList() {
   const [newTodo, setNewTodo] = useState("");
   const [contract, setContract] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState(null);
   const [walletAddress, setWalletAddress] = useState(null);
   const [totalTodos, setTotalTodos] = useState(0);
@@ -60,54 +59,10 @@ export default function TodoList() {
   const inputRef = useRef(null);
   const pendingTodosRef = useRef([]);
 
-  const fetchTodos = useCallback(async () => {
-    if (contract && walletAddress) {
-      if (isInitialLoading) setIsLoading(true);
-      try {
-        const total = await contract.getTodoCount(walletAddress);
-        setTotalTodos(total.toNumber());
-
-        const todosList = await contract.getUserTodos(
-          walletAddress,
-          0,
-          displayedTodos
-        );
-        const formattedTodos = todosList.map((todo) => ({
-          id: todo.id.toNumber(),
-          content: todo.content,
-          tags: todo.tags,
-          isCompleted: todo.isCompleted,
-          createdAt: todo.createdAt.toNumber(), // Capture the createdAt timestamp
-        }));
-        console.log("Fetched todos:", formattedTodos);
-        setTodos(formattedTodos);
-        setError(null);
-      } catch (error) {
-        console.error("Failed to fetch todos:", error);
-        setError(
-          "Failed to fetch todos. Please make sure you're connected to Base."
-        );
-      } finally {
-        setIsLoading(false);
-        setIsInitialLoading(false);
-      }
-    } else {
-      console.log("Contract not initialized or wallet not connected");
-      setIsLoading(false);
-      setIsInitialLoading(false);
-    }
-  }, [contract, walletAddress, displayedTodos, isInitialLoading]);
-
-  const debouncedFetchTodosCallback = useCallback(() => {
-    debouncedFetchTodos(fetchTodos);
-  }, [fetchTodos]);
-
   const connectWallet = async () => {
     try {
       if (typeof window.ethereum === "undefined") {
-        throw new Error(
-          "No wallet detected. Please install Coinbase Wallet or another option from a different provider."
-        );
+        throw new Error("No Web3 provider detected. Please install MetaMask.");
       }
 
       const accounts = await window.ethereum.request({
@@ -117,9 +72,7 @@ export default function TodoList() {
       setWalletAddress(accounts[0]);
       setIsWalletConnected(true);
 
-      console.log("Wallet connected:", accounts[0]);
-
-      // Initialize contract after wallet connection
+      // Initialize contract here or in a useEffect after wallet connection
       initializeContract();
     } catch (error) {
       console.error("Failed to connect wallet:", error);
@@ -131,9 +84,7 @@ export default function TodoList() {
     console.log("Initializing contract");
     try {
       if (typeof window.ethereum === "undefined") {
-        throw new Error(
-          "No Web3 provider detected. Please install Coinbase Wallet."
-        );
+        throw new Error("No Web3 provider detected. Please install MetaMask.");
       }
 
       const provider = new ethers.providers.Web3Provider(window.ethereum);
@@ -160,6 +111,8 @@ export default function TodoList() {
       );
       console.log("Contract initialized:", contract.address);
       setContract(contract);
+
+      setIsInitialLoading(false); // Ensure loading state is turned off
 
       // Listen for account changes
       window.ethereum.on("accountsChanged", (accounts) => {
@@ -191,22 +144,14 @@ export default function TodoList() {
   }, []);
 
   useEffect(() => {
-    console.log("Checking if wallet is connected...");
-    if (typeof window.ethereum !== "undefined") {
-      connectWallet();
-    } else {
-      console.log("No Ethereum provider found.");
-      setIsInitialLoading(false);
-      setError("Please install MetaMask or another Web3 wallet.");
+    if (walletAddress) {
+      initializeContract();
     }
-  }, []);
+  }, [initializeContract, walletAddress]);
 
   useEffect(() => {
     if (contract && walletAddress) {
-      console.log("Contract and wallet are ready, fetching todos...");
       fetchTodos();
-    } else {
-      console.log("Contract or wallet not ready yet.");
     }
   }, [contract, walletAddress, fetchTodos]);
 
@@ -336,8 +281,7 @@ export default function TodoList() {
     });
   };
 
-  if (isInitialLoading) {
-    console.log("Initial loading state...");
+  if (isLoading || isInitialLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#030d22] text-[#fdfeff]">
         Loading...
