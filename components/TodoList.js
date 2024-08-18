@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { createWeb3Modal, defaultWagmiConfig } from "@web3modal/wagmi";
 import { WagmiConfig } from "wagmi";
 import { base } from "viem/chains";
@@ -22,9 +22,9 @@ if (!projectId) {
 }
 
 const metadata = {
-  name: "Azimuth Todo",
-  description: "A decentralized todo list on Base",
-  url: "https://web3modal.com",
+  name: "Open Work",
+  description: "Build in public and show the world what you're working on.",
+  url: "https://openwork.fi/",
   icons: ["https://avatars.githubusercontent.com/u/37784886"],
 };
 
@@ -55,6 +55,9 @@ export default function TodoList() {
   const [walletAddress, setWalletAddress] = useState(null);
   const [totalTodos, setTotalTodos] = useState(0);
   const [displayedTodos, setDisplayedTodos] = useState(10);
+  const [selectedTaskIndex, setSelectedTaskIndex] = useState(-1);
+  const inputRef = useRef(null);
+  const pendingTodosRef = useRef([]);
 
   const fetchTodos = useCallback(async () => {
     if (contract && walletAddress) {
@@ -73,9 +76,7 @@ export default function TodoList() {
           content: todo.content,
           tags: todo.tags,
           isCompleted: todo.isCompleted,
-          createdAt: todo.createdAt
-            ? new Date(todo.createdAt.toNumber() * 1000)
-            : null, // Convert from seconds to milliseconds
+          createdAt: todo.createdAt.toNumber(), // Capture the createdAt timestamp
         }));
         console.log("Fetched todos:", formattedTodos);
         setTodos(formattedTodos);
@@ -96,22 +97,6 @@ export default function TodoList() {
     }
   }, [contract, walletAddress, displayedTodos, isInitialLoading]);
 
-  const formatDate = (date) => {
-    if (!date) return "No date available";
-    return new Date(date).toLocaleString("en-US", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
-  };
-
-  const sortTodosByDate = (todos) => {
-    return todos.sort((a, b) => a.createdAt - b.createdAt);
-  };
-
   const debouncedFetchTodosCallback = useCallback(() => {
     debouncedFetchTodos(fetchTodos);
   }, [fetchTodos]);
@@ -121,7 +106,7 @@ export default function TodoList() {
     try {
       if (typeof window.ethereum === "undefined") {
         throw new Error(
-          "No Web3 provider detected. Please install Coinbase Wallet or another Web3 wallet."
+          "No Web3 provider detected. Please install Coinbase Wallet."
         );
       }
 
@@ -194,30 +179,15 @@ export default function TodoList() {
       const tags = newTodo.match(/#\w+/g) || [];
       const content = newTodo.replace(/#\w+/g, "").trim();
 
-      // Optimistic update
-      const optimisticTodo = {
-        id: Date.now(), // temporary id
-        content,
-        tags,
-        isCompleted: false,
-        createdAt: new Date(), // Add this line
-      };
-      setTodos((prevTodos) => [...prevTodos, optimisticTodo]);
-      setNewTodo("");
-
       try {
         const tx = await contract.createTodo(content, tags);
+        setNewTodo("");
         await tx.wait();
-        // Fetch the updated list to get the correct ID from the blockchain
         debouncedFetchTodosCallback();
       } catch (error) {
         console.error("Failed to add todo:", error);
         setError(
           "Failed to add todo. Please make sure you're connected to Base and try again."
-        );
-        // Remove the optimistic todo if the transaction failed
-        setTodos((prevTodos) =>
-          prevTodos.filter((todo) => todo.id !== optimisticTodo.id)
         );
       }
     },
@@ -226,35 +196,22 @@ export default function TodoList() {
 
   const completeTodo = useCallback(
     async (id) => {
-      // Optimistic update
-      setTodos((prevTodos) =>
-        prevTodos.map((todo) =>
-          todo.id === id ? { ...todo, isCompleted: true } : todo
-        )
-      );
-
       try {
         const tx = await contract.completeTodo(id);
         await tx.wait();
-        // We don't need to call debouncedFetchTodosCallback here anymore
+        debouncedFetchTodosCallback();
       } catch (error) {
         console.error("Failed to complete todo:", error);
         setError(
           "Failed to complete todo. Please make sure you're connected to Base and try again."
         );
-        // Revert the optimistic update
-        setTodos((prevTodos) =>
-          prevTodos.map((todo) =>
-            todo.id === id ? { ...todo, isCompleted: false } : todo
-          )
-        );
       }
     },
-    [contract]
+    [contract, debouncedFetchTodosCallback]
   );
 
   const groupTodosByStatusAndTag = useCallback((todosList) => {
-    return todosList.reduce((acc, todo) => {
+    const grouped = todosList.reduce((acc, todo) => {
       const status = todo.isCompleted ? "completed" : "pending";
       if (!acc[status]) acc[status] = {};
 
@@ -266,7 +223,65 @@ export default function TodoList() {
 
       return acc;
     }, {});
+
+    // Update pendingTodosRef
+    pendingTodosRef.current = todosList.filter((todo) => !todo.isCompleted);
+
+    return grouped;
   }, []);
+
+  const handleKeyDown = useCallback(
+    (e) => {
+      const isInputFocused = document.activeElement === inputRef.current;
+
+      switch (e.key) {
+        case "c":
+          if (!isInputFocused) {
+            e.preventDefault();
+            inputRef.current.focus();
+            setSelectedTaskIndex(-1);
+          }
+          break;
+        case "j":
+          if (!isInputFocused) {
+            e.preventDefault();
+            setSelectedTaskIndex((prev) => Math.max(0, prev - 1));
+          }
+          break;
+        case "k":
+          if (!isInputFocused) {
+            e.preventDefault();
+            setSelectedTaskIndex((prev) =>
+              Math.min(pendingTodosRef.current.length - 1, prev + 1)
+            );
+          }
+          break;
+        case "Escape":
+          e.preventDefault();
+          if (isInputFocused) {
+            inputRef.current.blur();
+          } else {
+            setSelectedTaskIndex(-1);
+          }
+          break;
+        case "Enter":
+          if (!isInputFocused && selectedTaskIndex !== -1) {
+            e.preventDefault();
+            const selectedTodo = pendingTodosRef.current[selectedTaskIndex];
+            if (selectedTodo) {
+              completeTodo(selectedTodo.id);
+            }
+          }
+          break;
+      }
+    },
+    [selectedTaskIndex, completeTodo]
+  );
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleKeyDown]);
 
   const groupedTodos = groupTodosByStatusAndTag(todos);
 
@@ -318,10 +333,11 @@ export default function TodoList() {
           <form onSubmit={addTodo} className="mb-8">
             <div className="flex items-center bg-[#0d0931] rounded-lg overflow-hidden border border-[#150f53]">
               <input
+                ref={inputRef}
                 type="text"
                 value={newTodo}
                 onChange={(e) => setNewTodo(e.target.value)}
-                placeholder="Add a new todo (use #tags)"
+                placeholder="New task (use #tags)"
                 className="flex-grow p-3 bg-transparent focus:outline-none text-[#fdfeff] placeholder-[#f3f3f3]"
               />
               <button
@@ -349,37 +365,52 @@ export default function TodoList() {
                         <h3 className="text-xl font-medium mb-3 text-[#0ef3ff]">
                           {tag}
                         </h3>
-                        <ul className="space-y-4">
-                          {sortTodosByDate(groupedTodos.pending[tag]).map(
-                            (todo) => (
-                              <li key={todo.id} className="flex flex-col">
-                                <div className="flex items-center justify-between">
+                        <ul className="space-y-2">
+                          {groupedTodos.pending[tag].map((todo, index) => {
+                            const globalIndex =
+                              pendingTodosRef.current.findIndex(
+                                (t) => t.id === todo.id
+                              );
+                            return (
+                              <li
+                                key={todo.id}
+                                className={`flex items-center justify-between p-2 ${
+                                  selectedTaskIndex === globalIndex
+                                    ? "bg-[#1a2b4a] rounded"
+                                    : ""
+                                }`}
+                              >
+                                <div className="flex flex-col">
                                   <span className="text-[#e1efff]">
                                     {todo.content}
                                   </span>
-                                  <button
-                                    onClick={() => completeTodo(todo.id)}
-                                    className="ml-2 bg-[#06ad00] text-white p-1 rounded hover:bg-[#3dd69c] transition duration-300"
-                                  >
-                                    <CheckIcon className="h-5 w-5" />
-                                  </button>
+                                  <span className="text-sm text-[#8b9cb3]">
+                                    Created at:{" "}
+                                    {new Date(
+                                      todo.createdAt * 1000
+                                    ).toLocaleString()}
+                                  </span>
                                 </div>
-                                <span className="text-xs text-[#8b9cb3] mt-1">
-                                  {formatDate(todo.createdAt)}
-                                </span>
+                                <button
+                                  onClick={() => completeTodo(todo.id)}
+                                  className="ml-2 bg-[#06ad00] text-white px-3 py-1 rounded hover:bg-[#3dd69c] transition duration-300"
+                                >
+                                  <CheckIcon className="h-5 w-5" />
+                                </button>
                               </li>
-                            )
-                          )}
+                            );
+                          })}
                         </ul>
                       </div>
                     )
                 )}
               </div>
             )}
+
           {groupedTodos.completed &&
             Object.keys(groupedTodos.completed).length > 0 && (
               <div className="mb-12">
-                <h2 className="text-2xl font-semibold mb-4 text-[#39c0ff]">
+                <h2 className="text-2xl font-semibold mb-4 text-[#ffd400]">
                   Completed
                 </h2>
                 {sortTags(Object.keys(groupedTodos.completed)).map(
@@ -393,18 +424,22 @@ export default function TodoList() {
                           {tag}
                         </h3>
                         <ul className="space-y-2">
-                          {sortTodosByDate(groupedTodos.completed[tag]).map(
-                            (todo) => (
-                              <li key={todo.id} className="flex flex-col">
-                                <span className="line-through text-[#8b9cb3]">
-                                  {todo.content}
+                          {groupedTodos.completed[tag].map((todo) => (
+                            <li
+                              key={todo.id}
+                              className="line-through text-[#8b9cb3]"
+                            >
+                              <div className="flex flex-col">
+                                <span>{todo.content}</span>
+                                <span className="text-sm">
+                                  Created at:{" "}
+                                  {new Date(
+                                    todo.createdAt * 1000
+                                  ).toLocaleString()}
                                 </span>
-                                <span className="text-xs text-[#8b9cb3] mt-1">
-                                  {formatDate(todo.createdAt)}
-                                </span>
-                              </li>
-                            )
-                          )}
+                              </div>
+                            </li>
+                          ))}
                         </ul>
                       </div>
                     )
@@ -420,6 +455,42 @@ export default function TodoList() {
               Show More
             </button>
           )}
+
+          <div className="text-sm text-gray-400 mt-4">
+            <p>Keyboard shortcuts:</p>
+            <ul className="list-disc list-inside">
+              <li>
+                <span style={{ color: "#ffd400" }}>
+                  <strong>c</strong>
+                </span>
+                : Create task
+              </li>
+              <li>
+                <span style={{ color: "#ffd400" }}>
+                  <strong>j</strong>
+                </span>
+                : Navigate up in pending tasks
+              </li>
+              <li>
+                <span style={{ color: "#ffd400" }}>
+                  <strong>k</strong>
+                </span>
+                : Navigate down in pending tasks
+              </li>
+              <li>
+                <span style={{ color: "#ffd400" }}>
+                  <strong>esc</strong>
+                </span>
+                : Cancel task creation or deselect task
+              </li>
+              <li>
+                <span style={{ color: "#ffd400" }}>
+                  <strong>return</strong>
+                </span>
+                : Save task or complete selected task
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </WagmiConfig>
