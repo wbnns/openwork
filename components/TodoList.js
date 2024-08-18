@@ -153,41 +153,6 @@ export default function TodoList() {
     }
   };
 
-  const connectWallet = async () => {
-    try {
-      if (typeof window.ethereum === "undefined") {
-        throw new Error(
-          "No wallet detected. Please install Coinbase Wallet or another option from a different provider."
-        );
-      }
-
-      const accounts = await window.ethereum.request({
-        method: "eth_requestAccounts",
-      });
-
-      setWalletAddress(accounts[0]);
-      setIsWalletConnected(true);
-
-      console.log("Wallet connected:", accounts[0]);
-
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      const { chainId } = await provider.getNetwork();
-
-      if (chainId !== 8453) {
-        console.log(
-          "Wallet connected to a different chain. Switching to Base (8453)..."
-        );
-        await switchToBaseChain();
-      }
-
-      // Initialize contract after wallet connection and chain check
-      initializeContract();
-    } catch (error) {
-      console.error("Failed to connect wallet:", error);
-      setError(error.message || "Failed to connect wallet.");
-    }
-  };
-
   const initializeContract = useCallback(async () => {
     console.log("Initializing contract");
     try {
