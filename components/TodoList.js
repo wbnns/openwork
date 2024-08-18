@@ -422,7 +422,7 @@ export default function TodoList() {
                 value={newTodo}
                 onChange={(e) => setNewTodo(e.target.value)}
                 placeholder="New task (use #tags)"
-                className="flex-grow p-3 bg-transparent focus:outline-none text-[#fdfeff] placeholder-[#f3f3f3]"
+                className="flex-grow p-3 bg-transparent focus:outline-none text-[#fdfeff] placeholder-[#f3f3f3] placeholder-opacity-100"
               />
               <button
                 type="submit"
