@@ -161,8 +161,6 @@ export default function TodoList() {
       console.log("Contract initialized:", contract.address);
       setContract(contract);
 
-      window.location.reload();
-
       // Listen for account changes
       window.ethereum.on("accountsChanged", (accounts) => {
         setWalletAddress(accounts[0]);
