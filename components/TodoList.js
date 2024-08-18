@@ -102,6 +102,22 @@ export default function TodoList() {
     debouncedFetchTodos(fetchTodos);
   }, [fetchTodos]);
 
+  const switchToBaseChain = async () => {
+    try {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x2105" }], // 0x2105 is the hex value for 8453
+      });
+      console.log("Successfully switched to Base chain (8453).");
+    } catch (switchError) {
+      if (switchError.code === 4902) {
+        console.error("The Base chain (8453) is not added to your wallet.");
+      } else {
+        console.error("Failed to switch to Base chain:", switchError);
+      }
+    }
+  };
+
   const connectWallet = async () => {
     try {
       if (typeof window.ethereum === "undefined") {
@@ -119,7 +135,52 @@ export default function TodoList() {
 
       console.log("Wallet connected:", accounts[0]);
 
-      // Initialize contract after wallet connection
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const { chainId } = await provider.getNetwork();
+
+      if (chainId !== 8453) {
+        console.log(
+          "Wallet connected to a different chain. Switching to Base (8453)..."
+        );
+        await switchToBaseChain();
+      }
+
+      // Initialize contract after wallet connection and chain check
+      initializeContract();
+    } catch (error) {
+      console.error("Failed to connect wallet:", error);
+      setError(error.message || "Failed to connect wallet.");
+    }
+  };
+
+  const connectWallet = async () => {
+    try {
+      if (typeof window.ethereum === "undefined") {
+        throw new Error(
+          "No wallet detected. Please install Coinbase Wallet or another option from a different provider."
+        );
+      }
+
+      const accounts = await window.ethereum.request({
+        method: "eth_requestAccounts",
+      });
+
+      setWalletAddress(accounts[0]);
+      setIsWalletConnected(true);
+
+      console.log("Wallet connected:", accounts[0]);
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const { chainId } = await provider.getNetwork();
+
+      if (chainId !== 8453) {
+        console.log(
+          "Wallet connected to a different chain. Switching to Base (8453)..."
+        );
+        await switchToBaseChain();
+      }
+
+      // Initialize contract after wallet connection and chain check
       initializeContract();
     } catch (error) {
       console.error("Failed to connect wallet:", error);
