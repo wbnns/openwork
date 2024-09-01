@@ -323,15 +323,15 @@ export default function TodoList() {
         case "j":
           if (!isInputFocused) {
             e.preventDefault();
-            setSelectedTaskIndex((prev) => Math.max(0, prev - 1));
+            setSelectedTaskIndex((prev) =>
+              Math.min(pendingTodosRef.current.length - 1, prev + 1)
+            );
           }
           break;
         case "k":
           if (!isInputFocused) {
             e.preventDefault();
-            setSelectedTaskIndex((prev) =>
-              Math.min(pendingTodosRef.current.length - 1, prev + 1)
-            );
+            setSelectedTaskIndex((prev) => Math.max(0, prev - 1));
           }
           break;
         case "Escape":
@@ -464,20 +464,22 @@ export default function TodoList() {
                                     : ""
                                 }`}
                               >
-                                <div className="flex flex-col">
-                                  <span className="text-[#e1efff]">
-                                    {todo.content}
-                                  </span>
-                                  <span className="text-sm text-[#8b9cb3]">
-                                    Created at:{" "}
-                                    {new Date(
-                                      todo.createdAt * 1000
-                                    ).toLocaleString()}
-                                  </span>
+                                <div className="flex-grow mr-2 overflow-hidden">
+                                  <div className="flex flex-col">
+                                    <span className="text-[#e1efff] break-words">
+                                      {todo.content}
+                                    </span>
+                                    <span className="text-sm text-[#8b9cb3]">
+                                      Created at:{" "}
+                                      {new Date(
+                                        todo.createdAt * 1000
+                                      ).toLocaleString()}
+                                    </span>
+                                  </div>
                                 </div>
                                 <button
                                   onClick={() => completeTodo(todo.id)}
-                                  className="ml-2 bg-[#06ad00] text-white px-3 py-1 rounded hover:bg-[#3dd69c] transition duration-300"
+                                  className="ml-2 bg-[#06ad00] text-white p-1 rounded hover:bg-[#3dd69c] transition duration-300 flex-shrink-0"
                                 >
                                   <CheckIcon className="h-5 w-5" />
                                 </button>
@@ -553,13 +555,13 @@ export default function TodoList() {
                 <span style={{ color: "#ffd400" }}>
                   <strong>j</strong>
                 </span>
-                : Navigate up in pending tasks
+                : Navigate down in pending tasks
               </li>
               <li>
                 <span style={{ color: "#ffd400" }}>
                   <strong>k</strong>
                 </span>
-                : Navigate down in pending tasks
+                : Navigate up in pending tasks
               </li>
               <li>
                 <span style={{ color: "#ffd400" }}>
