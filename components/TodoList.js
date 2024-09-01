@@ -311,6 +311,7 @@ export default function TodoList() {
   const handleKeyDown = useCallback(
     (e) => {
       const isInputFocused = document.activeElement === inputRef.current;
+      const pendingTodosCount = pendingTodosRef.current.length;
 
       switch (e.key) {
         case "c":
@@ -324,14 +325,16 @@ export default function TodoList() {
           if (!isInputFocused) {
             e.preventDefault();
             setSelectedTaskIndex((prev) =>
-              Math.min(pendingTodosRef.current.length - 1, prev + 1)
+              prev >= pendingTodosCount - 1 ? 0 : prev + 1
             );
           }
           break;
         case "k":
           if (!isInputFocused) {
             e.preventDefault();
-            setSelectedTaskIndex((prev) => Math.max(0, prev - 1));
+            setSelectedTaskIndex((prev) =>
+              prev <= 0 ? pendingTodosCount - 1 : prev - 1
+            );
           }
           break;
         case "Escape":
